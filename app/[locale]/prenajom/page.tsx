@@ -1,0 +1,12 @@
+import type { Metadata } from 'next';
+import { ListingHub, hubMetadata } from '@/components/listing-hub';
+
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  return hubMetadata({ transaction: 'prenajom' }, await searchParams);
+}
+
+export default async function Page({ searchParams }: Props) {
+  return <ListingHub params={{ transaction: 'prenajom' }} search={await searchParams} />;
+}
