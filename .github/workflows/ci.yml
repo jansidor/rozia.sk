@@ -49,7 +49,7 @@ jobs:
           for f in supabase/migrations/*.sql; do echo "== $f"; psql -v ON_ERROR_STOP=1 -q -f "$f"; done
       - name: Testy oprávnení (CRM jadro)
         run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm.sql
-      - name: Testy oprávnení (0004: práva funkcií, odovzdanie, Nepridelené)
+      - name: Testy oprávnení (0004 - práva funkcií, odovzdanie, Nepridelené)
         run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm_2.sql
       - name: Migrácie sú opakovateľné (0003 a 0004 druhýkrát)
         run: |
