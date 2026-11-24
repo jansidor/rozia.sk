@@ -1,0 +1,57 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Testy vzorcov
+        run: npm test
+      - name: Build (vygeneruje aj next-env.d.ts potrebné pre typecheck)
+        run: npm run build
+      - name: TypeScript strict
+        run: npm run typecheck
+      - name: Kontrast farieb (WCAG 2.2 AA)
+        run: npm run check:contrast
+
+  databaza:
+    # Migrácie a testy oprávnení na čistom Postgrese 16 so simuláciou Supabase rolí (supabase/tests/bootstrap_local.sql).
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: rozia_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Čistá databáza a simulácia Supabase
+        run: |
+          createdb -h localhost -U postgres rozia_test
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/bootstrap_local.sql
+      - name: Migrácie v poradí
+        run: |
+          for f in supabase/migrations/*.sql; do echo "== $f"; psql -v ON_ERROR_STOP=1 -q -f "$f"; done
+      - name: Testy oprávnení (CRM jadro)
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm.sql
+      - name: Testy oprávnení (0004: práva funkcií, odovzdanie, Nepridelené)
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm_2.sql
+      - name: Migrácie sú opakovateľné (0003 a 0004 druhýkrát)
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0003_hardening.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0004_hardening_handoff.sql
