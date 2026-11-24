@@ -7,9 +7,12 @@
 3. `migrations/0003_hardening.sql`: spevnenie: pohľad `comparables` už nie je verejný, kontroly rolí bezpečné voči NULL, záložné pobočky.
 4. `migrations/0004_hardening_handoff.sql`: oprava práv na funkcie (audit už nie je volateľný zvonka), ochrana stĺpcov ocenení,
    Nepridelené aj bez pobočky, kontakt Financií len pri nábore, odovzdanie kolegovi, dostupnosť makléra.
-5. Len staging: `seed/staging_staff.sql`: pobočky a role pre testovacie účty `admin@`, `makler@`, `financie@test.rozia.sk`
+5. `migrations/0005_lifecycle.sql`: archív nedohodnutých náborov s obnovením a anonymizáciou po 24 mesiacoch, vrátený klient
+   (zhoda od 80 %), pridelenie ocenení (ručne admin, automatické striedanie pripravené a vypnuté), návrh dokumentov, číselník obcí.
+6. `seed/branches.sql`: 4 pobočky, záložná pobočka a okresy (bezpečné aj na produkcii, idempotentné).
+7. Len staging: `seed/staging_staff.sql`: pobočky a role pre testovacie účty `admin@`, `makler@`, `financie@test.rozia.sk`
    (účty najprv vytvor v Authentication → Users s „Auto Confirm User“).
-6. `tests/rls_crm.sql` a `tests/rls_crm_2.sql` (po 0004): testy oprávnení. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = výsledok `VŠETKY TESTY PRESLI`.
+8. `tests/rls_crm.sql`, `rls_crm_2.sql` (po 0004) a `rls_crm_3.sql` (po 0005): testy oprávnení a pravidiel. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = výsledok `VŠETKY TESTY PRESLI`.
 
 ## Dôležité
 
@@ -36,6 +39,7 @@ psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/bootstrap_local.sql
 for f in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -q -d rozia_test -f "$f"; done
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_2.sql
+psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_3.sql
 ```
 
 Simulácia nenahrádza skúšku na skutočnom Supabase. Po nasadení na staging spusti oba testy v SQL Editore a ručne over, že
@@ -44,3 +48,13 @@ verejný (anon) kľúč nevie volať `rpc/audit`, `rpc/claim_unassigned` ani ďa
 ## Pravidlo pre nové funkcie
 Každá nová funkcia v schéme `public` dostane hneď `revoke all on function ... from public, anon, authenticated;` a `grant execute ... to authenticated`
 len ak ju má volať prihlásený používateľ (a vo vnútri si kontroluje rolu). Test N9 zlyhá, ak nejaká funkcia ostane volateľná anonymom.
+
+## Funkcie pre aplikáciu a pre server (0005)
+Prihlásený používateľ (kontrolu roly robí funkcia): `close_mandate_unagreed(nábor, dôvod)`, `restore_mandate(nábor)`,
+`returning_client_check(ocenenie)`, `link_returning_client(ocenenie, klient, obnovený_nábor)`, `assign_valuation(ocenenie, maklér, poznámka)` (len admin),
+`suggest_documents(nábor)`, `branch_for_municipality(obec, okres)`.
+Len server (service role, nie prihlásený používateľ): `auto_assign_valuation(ocenenie)` (volá po uložení nového ocenenia; robí niečo len keď
+`app_settings.assignment_mode = 'round_robin'`) a `anonymize_archived(mesiace)` (naplánovaná úloha, napr. denne). Súbory, ktoré treba zmazať vo Storage,
+zapisuje databáza do `storage_cleanup`; server ich maže a nastaví `done_at`.
+Nastavenia (`app_settings`): `assignment_mode` (`manual` / `round_robin`), `archive_retention_months` (24), `return_match_threshold` (0.8). Mení admin.
+Ocenenie z nacenime má do `valuations.payload` ukladať adresu pod kľúčom `adresa`, inak sa pri vrátenom klientovi adresa neporovnáva.

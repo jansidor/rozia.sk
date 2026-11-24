@@ -5,10 +5,10 @@ Návod pre majiteľa. Žiadne kľúče sa nepíšu do repa ani do chatu. Hodnoty
 ## 1. Testovací Supabase projekt
 1. supabase.com → New project. Región **eu-central-1 (Frankfurt)**. Názov napr. `rozia-staging`. Silné databázové heslo ulož do správcu hesiel.
 2. Authentication → Providers → Email: zapni, vypni verejnú registráciu (Allow new users to sign up = vypnuté). Účty zakladá admin.
-3. SQL Editor: spusti po jednom súbore `supabase/migrations/0001` až `0004` a potom `supabase/tests/rls_crm.sql` a `rls_crm_2.sql`.
-   `bootstrap_local.sql` na Supabase **nespúšťaj**. Úspech testov je výsledok „VŠETKY TESTY PRESLI“ a „VŠETKY TESTY 0004 PRESLI“.
+3. SQL Editor: spusti po jednom súbore `supabase/migrations/0001` až `0005`, potom `supabase/seed/branches.sql` (pobočky a okresy) a testy `supabase/tests/rls_crm.sql`, `rls_crm_2.sql` a `rls_crm_3.sql`.
+   `bootstrap_local.sql` na Supabase **nespúšťaj**. Úspech testov je výsledok „VŠETKY TESTY PRESLI“, „VŠETKY TESTY 0004 PRESLI“ a „VŠETKY TESTY 0005 PRESLI“.
 4. Authentication → Users → Add user (Auto Confirm User): `admin@test.rozia.sk`, `makler@test.rozia.sk`, `financie@test.rozia.sk`.
-   Potom spusti `supabase/seed/staging_staff.sql` (pobočky a role). Kontrola: výsledok má 3 riadky.
+   Potom spusti `supabase/seed/staging_staff.sql` (role testovacích účtov). Kontrola: výsledok má 3 riadky.
 5. Ručná kontrola práv: s verejným (anon) kľúčom skús `rpc/audit`, `rpc/claim_unassigned`, `rpc/set_financing_status` (REST). Všetky musia zlyhať.
 6. Settings → API: skopíruj Project URL, `anon` kľúč a `service_role` kľúč (ten je tajný, nikdy `NEXT_PUBLIC_`).
 
