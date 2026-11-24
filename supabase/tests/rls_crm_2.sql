@@ -72,11 +72,13 @@ begin
   select string_agg(p.proname, ', ') into txt from pg_proc p
    where p.pronamespace = 'public'::regnamespace
      and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+     and p.prorettype not in ('trigger'::regtype, 'event_trigger'::regtype)   -- trigger funkcie sa zvonka volať nedajú (napr. rls_auto_enable od Supabase)
      and has_function_privilege('anon', p.oid, 'execute');
   assert txt is null, format('N9 anon smie volať: %s', txt);
   select string_agg(p.proname, ', ') into txt from pg_proc p
    where p.pronamespace = 'public'::regnamespace
      and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+     and p.prorettype not in ('trigger'::regtype, 'event_trigger'::regtype)
      and has_function_privilege('authenticated', p.oid, 'execute')
      and p.proname not in ('app_role', 'app_is_admin', 'app_is_finance', 'app_branch', 'set_financing_status',
                            'finance_view_client', 'claim_unassigned', 'set_my_availability', 'handoff_mandate',
