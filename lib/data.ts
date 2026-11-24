@@ -20,6 +20,15 @@ function db(): SupabaseClient | null {
   return client;
 }
 
+/** Servisný klient (len server): na údaje, ktoré verejný kľúč nesmie čítať (pohľad comparables, viď migrácia 0003). */
+let adminClient: SupabaseClient | null = null;
+function adminDb(): SupabaseClient | null {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  adminClient ??= createClient(url, key, { auth: { persistSession: false } });
+  return adminClient;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Row = Record<string, any>;
 
@@ -160,12 +169,20 @@ export async function getPriceStats(): Promise<PriceStat[]> {
 
 export async function getComparables(citySlug: string, partSlug: string | null): Promise<Comparable[]> {
   if (demoMode) return demo.demoComparables[partSlug ? `${citySlug}/${partSlug}` : citySlug] ?? [];
-  const data = await rows('comparables', (q) => {
-    let b = q.eq('city_slug', citySlug).eq('property_type', 'byty');
-    if (partSlug) b = b.eq('part_slug', partSlug);
-    return b.limit(300);
-  });
-  return data.map((r) => ({ pricePerM2: Number(r.price_per_m2), source: r.source }));
+  // Pohľad comparables nie je verejný (obsahuje aj predaje bez súhlasu klienta); číta ho len server so servisným kľúčom.
+  const c = adminDb();
+  if (!c) {
+    if (hasDatabase) console.error('[data] comparables: chýba SUPABASE_SERVICE_ROLE_KEY, odhad ceny nemá z čoho počítať');
+    return [];
+  }
+  let q = c.from('comparables').select('*').eq('city_slug', citySlug).eq('property_type', 'byty');
+  if (partSlug) q = q.eq('part_slug', partSlug);
+  const { data, error } = await q.limit(300);
+  if (error) {
+    console.error(`[data] comparables: ${error.message}`);
+    return [];
+  }
+  return ((data as Row[]) ?? []).map((r) => ({ pricePerM2: Number(r.price_per_m2), source: r.source }));
 }
 
 /* ---------- Obsah ---------- */
