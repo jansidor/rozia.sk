@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { normalizePhone } from './format';
 
 export const PHONE_ERROR = 'Číslo zadajte v tvare +421 9xx xxx xxx.';
-export const GDPR_TEXT = 'Súhlasím so spracovaním údajov na účel ocenenia a kontaktovania.';
-export const GDPR_TEXT_CONTACT = 'Súhlasím so spracovaním údajov na účel vybavenia mojej správy.';
+export const GDPR_TEXT = 'Súhlasím so spracovaním údajov na účel ocenenia a kontaktovania zo strany NajBývanie Ružomberok, s. r. o. (Rozia).';
+export const GDPR_TEXT_CONTACT = 'Súhlasím so spracovaním údajov na účel vybavenia mojej správy zo strany NajBývanie Ružomberok, s. r. o. (Rozia).';
 export const MARKETING_TEXT = 'Chcem raz za štvrťrok dostať cenovú mapu Liptova e-mailom.';
 
 const phone = z.string().trim().transform((v, ctx) => {

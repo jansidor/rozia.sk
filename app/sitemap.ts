@@ -3,7 +3,7 @@ import { getAgents, getArticles, getListings, getPriceStats, getSales } from '@/
 import { cities } from '@/lib/localities';
 import { listingPath } from '@/lib/jsonld';
 import { positions } from '@/content/career';
-import { legalReady, site } from '@/lib/site';
+import { approvedDocuments, legalReady, site } from '@/lib/site';
 
 export const revalidate = 3600;
 
@@ -18,7 +18,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const statsUpdated = latest(stats.map((s) => s.updatedAt));
 
   const statics = ['/predat-nehnutelnost/', '/predat-nehnutelnost/ocenenie/', '/kupujem/', '/kariera/', '/kariera/kalkulacka-prijmu/', '/kariera/model-spoluprace/', '/o-nas/', '/kontakt/', '/cookies/', '/vyhlasenie-o-pristupnosti/', '/lokality/'];
-  if (legalReady) statics.push('/obchodne-podmienky/', '/ochrana-osobnych-udajov/');
+  if (legalReady && approvedDocuments.terms) statics.push('/obchodne-podmienky/');
+  if (legalReady && approvedDocuments.privacy) statics.push('/ochrana-osobnych-udajov/');
 
   // Kombinácie typ × lokalita len tam, kde je reálna ponuka.
   const combos = new Map<string, string>();
