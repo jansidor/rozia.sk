@@ -51,7 +51,12 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm.sql
       - name: Testy oprávnení (0004 - práva funkcií, odovzdanie, Nepridelené)
         run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm_2.sql
-      - name: Migrácie sú opakovateľné (0003 a 0004 druhýkrát)
+      - name: Testy (0005 - archív, anonymizácia, vrátený klient, pridelenie, návrh dokumentov)
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm_3.sql
+      - name: Migrácie sú opakovateľné (0003 až 0005 druhýkrát) a seed pobočiek
         run: |
           psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0003_hardening.sql
           psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0004_hardening_handoff.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0005_lifecycle.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/seed/branches.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/seed/branches.sql

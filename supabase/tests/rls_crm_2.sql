@@ -80,7 +80,9 @@ begin
      and has_function_privilege('authenticated', p.oid, 'execute')
      and p.proname not in ('app_role', 'app_is_admin', 'app_is_finance', 'app_branch', 'set_financing_status',
                            'finance_view_client', 'claim_unassigned', 'set_my_availability', 'handoff_mandate',
-                           'handoff_valuation', 'list_colleagues');
+                           'handoff_valuation', 'list_colleagues', 'close_mandate_unagreed', 'restore_mandate',
+                           'returning_client_check', 'link_returning_client', 'assign_valuation', 'suggest_documents',
+                           'branch_for_municipality');
   assert txt is null, format('N9b prihlásený smie volať aj: %s (ak je to zámer, pridaj do zoznamu v teste)', txt);
   -- anon naozaj nezapíše do auditu
   perform pg_temp.login(null, 'anon');
