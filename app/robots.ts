@@ -6,7 +6,7 @@ const FILTER_PARAMS = ['cena-do', 'izby', 'plocha-od', 'sort', 'adresa', 'lokali
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: FILTER_PARAMS.flatMap((p) => [`/*?${p}=`, `/*&${p}=`]) }],
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/crm/', ...FILTER_PARAMS.flatMap((p) => [`/*?${p}=`, `/*&${p}=`])] }],
     sitemap: `${site.url}/sitemap.xml`,
     host: site.url,
   };
