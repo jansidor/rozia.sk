@@ -80,3 +80,20 @@ maže dopyty z webu po 12 mesiacoch a audit po 36 mesiacoch. Lehoty sú v `app_s
 `audit_retention_months`, `inbound_scrub_days`); **ak ich zmeníš, zmeň aj zásady na webe**. Funkciu spúšťa Vercel Cron (`vercel.json`, route `/api/cron/retention/`,
 tajomstvo `CRON_SECRET`). Bez nastaveného `CRON_SECRET` sa údržba nespustí, preto ho nastav pred zapnutím prenosu leadov.
 Súbory vo Storage na zmazanie sú zatiaľ len vo fronte `storage_cleanup` (Storage s dokumentmi ešte nie je nasadený); výsledok údržby ukazuje počet čakajúcich súborov.
+
+## CRM aplikácia (`/crm/`)
+Interná aplikácia v tom istom projekte, oddelená od verejného webu: vlastný koreňový layout (`app/crm/layout.tsx`), neindexuje sa (`noindex`, `robots.txt`), cesty `/crm/…`.
+Prihlásenie e-mailom a heslom cez Supabase Auth (relácia v httpOnly cookies, `@supabase/ssr`). `proxy.ts` obnoví reláciu a neprihláseného pošle na `/crm/login/`.
+Oprávnenia vynucuje databáza (RLS a funkcie z migrácií); menu podľa roly je len pohodlie.
+
+| Obrazovka | Rola | Čo robí |
+|---|---|---|
+| `/crm/` | všetci | prehľad s počtami |
+| `/crm/ocenenia/` | maklér | moje pridelené ocenenia s kontaktom klienta |
+| `/crm/nepridelene/` | maklér | Nepridelené, tlačidlo „Vziať si“ (`claim_unassigned`, limit 1 za 24 h) |
+| `/crm/nabory/` | maklér, admin | zoznam náborov (maklér vlastné, admin všetky) |
+| `/crm/pridelenie/` | admin | ocenenia na pridelenie, výber makléra (`assign_valuation`), navrhnutá pobočka |
+| `/crm/financovanie/` a `/crm/financovanie/<id>/` | financie, admin | zoznam náborov, kontakt klienta (`finance_view_client`, zapisuje sa do auditu), stav financovania, poznámky |
+
+Zatiaľ chýba: vytvorenie náboru z ocenenia, archív a obnova náboru, vrátený klient, odovzdanie kolegovi, knižnica a vyplnenie dokumentov (funkcie sú v databáze, chýbajú obrazovky).
+Vyskúšanie na testovacom Supabase: vo Verceli (Preview) nastav `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, otvor `/crm/` a prihlás sa testovacím účtom (admin, maklér, financie zo seedu).
