@@ -164,8 +164,9 @@ begin
   failed := false;
   begin perform handoff_mandate(m1, e1); exception when others then failed := true; end;
   assert failed, 'H5 cieľom nemôže byť neexistujúci zamestnanec';
-  select count(*) into n from list_colleagues(); assert n = 3, format('H6 maklér vidí %s kolegov (čakané 3: b2, b4, neprítomný)', n);
-  select count(*) into n from list_colleagues() where availability = 'away'; assert n = 1, 'H7 zoznam ukazuje dostupnosť';
+  select count(*) into n from list_colleagues() where id in (b2, b4, c1); assert n = 3, format('H6 maklér vidí %s testovacích kolegov (čakané 3: b2, b4, neprítomný)', n);
+  select count(*) into n from list_colleagues() where id = b1; assert n = 0, 'H6b maklér nevidí sám seba v zozname kolegov';
+  select count(*) into n from list_colleagues() where availability = 'away' and id in (b2, b4, c1); assert n = 1, 'H7 zoznam ukazuje dostupnosť';
   perform handoff_mandate(m1, b4, 'dovolenka');                    -- do inej pobočky (Dolný Kubín)
   select count(*) into n from mandates; assert n = 0, 'H8 pôvodný maklér nábor už nevidí';
   select count(*) into n from clients where id = cl1; assert n = 0, 'H9 ani jeho klienta';
