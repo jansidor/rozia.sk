@@ -9,10 +9,11 @@
    Nepridelené aj bez pobočky, kontakt Financií len pri nábore, odovzdanie kolegovi, dostupnosť makléra.
 5. `migrations/0005_lifecycle.sql`: archív nedohodnutých náborov s obnovením a anonymizáciou po 24 mesiacoch, vrátený klient
    (zhoda od 80 %), pridelenie ocenení (ručne admin, automatické striedanie pripravené a vypnuté), návrh dokumentov, číselník obcí.
-6. `seed/branches.sql`: 4 pobočky, záložná pobočka a okresy (bezpečné aj na produkcii, idempotentné).
-7. Len staging: `seed/staging_staff.sql`: pobočky a role pre testovacie účty `admin@`, `makler@`, `financie@test.rozia.sk`
+6. `migrations/0006_inbound.sql`: príjem leadov z nacenime (uloženie surovej udalosti, vytvorenie klienta a ocenenia, pobočka podľa obce, opakovanie a čistenie).
+7. `seed/branches.sql`: 4 pobočky, záložná pobočka a okresy (bezpečné aj na produkcii, idempotentné).
+8. Len staging: `seed/staging_staff.sql`: pobočky a role pre testovacie účty `admin@`, `makler@`, `financie@test.rozia.sk`
    (účty najprv vytvor v Authentication → Users s „Auto Confirm User“).
-8. `tests/rls_crm.sql`, `rls_crm_2.sql` (po 0004) a `rls_crm_3.sql` (po 0005): testy oprávnení a pravidiel. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = výsledok `VŠETKY TESTY PRESLI`.
+9. `tests/rls_crm.sql`, `rls_crm_2.sql` (po 0004), `rls_crm_3.sql` (po 0005) a `rls_crm_4.sql` (po 0006): testy oprávnení a pravidiel. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = výsledok `VŠETKY TESTY PRESLI`.
 
 ## Dôležité
 
@@ -40,6 +41,7 @@ for f in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -q -d rozia_test 
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_2.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_3.sql
+psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_4.sql
 ```
 
 Simulácia nenahrádza skúšku na skutočnom Supabase. Po nasadení na staging spusti oba testy v SQL Editore a ručne over, že
@@ -58,3 +60,13 @@ Len server (service role, nie prihlásený používateľ): `auto_assign_valuatio
 zapisuje databáza do `storage_cleanup`; server ich maže a nastaví `done_at`.
 Nastavenia (`app_settings`): `assignment_mode` (`manual` / `round_robin`), `archive_retention_months` (24), `return_match_threshold` (0.8). Mení admin.
 Ocenenie z nacenime má do `valuations.payload` ukladať adresu pod kľúčom `adresa`, inak sa pri vrátenom klientovi adresa neporovnáva.
+
+## Príjem leadov z nacenime (0006 a route)
+Adresa pre `NACENIME_LEAD_WEBHOOK` v nacenime: `https://<doména rozia>/api/inbound/nacenime/` **s lomkou na konci**. Web má zapnuté `trailingSlash`; bez lomky
+príde presmerovanie 308, ktoré nacenime nenasleduje, a doručenie by zlyhávalo (overené na bežiacom serveri).
+Route (`app/api/inbound/nacenime/route.ts`) overí podpis zo surového tela (`lib/webhook.ts`, zhoda s PHP v nacenime overená testovacím vektorom), potom zavolá databázovú
+funkciu `ingest_nacenime_event`. Odpovede: 200 uložené (aj keď spracovanie skončilo chybou: udalosť ostane v `inbound_events` so stavom `error`), 401 zlý podpis,
+400 zlé telo alebo ID udalosti, 413 príliš veľké, 500 databáza nedostupná (nacenime doručenie zopakuje), 503 chýba nastavenie.
+Funkcie len pre server (service role): `process_inbound_event`, `ingest_nacenime_event`, `retry_inbound_errors()` (chybné udalosti po oprave príčiny) a
+`scrub_inbound_events(dni)` (po spracovaní vymaže z udalosti osobné údaje, predvolene po 30 dňoch; pustiť z naplánovanej úlohy).
+Chybné udalosti sleduj: `select event_id, error, received_at from inbound_events where status = 'error'`.

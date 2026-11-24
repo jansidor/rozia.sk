@@ -5,7 +5,7 @@ Návod pre majiteľa. Žiadne kľúče sa nepíšu do repa ani do chatu. Hodnoty
 ## 1. Testovací Supabase projekt
 1. supabase.com → New project. Región **eu-central-1 (Frankfurt)**. Názov napr. `rozia-staging`. Silné databázové heslo ulož do správcu hesiel.
 2. Authentication → Providers → Email: zapni, vypni verejnú registráciu (Allow new users to sign up = vypnuté). Účty zakladá admin.
-3. SQL Editor: spusti po jednom súbore `supabase/migrations/0001` až `0005`, potom `supabase/seed/branches.sql` (pobočky a okresy) a testy `supabase/tests/rls_crm.sql`, `rls_crm_2.sql` a `rls_crm_3.sql`.
+3. SQL Editor: spusti po jednom súbore `supabase/migrations/0001` až `0006`, potom `supabase/seed/branches.sql` (pobočky a okresy) a testy `supabase/tests/rls_crm.sql`, `rls_crm_2.sql` a `rls_crm_3.sql`.
    `bootstrap_local.sql` na Supabase **nespúšťaj**. Úspech testov je výsledok „VŠETKY TESTY PRESLI“, „VŠETKY TESTY 0004 PRESLI“ a „VŠETKY TESTY 0005 PRESLI“.
 4. Authentication → Users → Add user (Auto Confirm User): `admin@test.rozia.sk`, `makler@test.rozia.sk`, `financie@test.rozia.sk`.
    Potom spusti `supabase/seed/staging_staff.sql` (role testovacích účtov). Kontrola: výsledok má 3 riadky.
@@ -13,8 +13,8 @@ Návod pre majiteľa. Žiadne kľúče sa nepíšu do repa ani do chatu. Hodnoty
 6. Settings → API: skopíruj Project URL, `anon` kľúč a `service_role` kľúč (ten je tajný, nikdy `NEXT_PUBLIC_`).
 
 ## 2. Premenné prostredia (len názvy)
-`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ROZIA_DEMO_DATA` (staging 0 alebo 1, produkcia vždy 0).
-Neskôr pribudne tajomstvo na overenie webhooku z nacenime (názov určí príjem; formát popisuje `docs/WEBHOOK.md` v repe nacenime).
+`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NACENIME_WEBHOOK_SECRET` (a pri výmene `NACENIME_WEBHOOK_SECRET_PREVIOUS`), `ROZIA_DEMO_DATA` (staging 0 alebo 1, produkcia vždy 0).
+Tajomstvo webhooku zadáva človek sám priamo vo Verceli (rovnaká hodnota ako `NACENIME_LEAD_WEBHOOK_SECRET` v `shared/.env` nacenime); formát popisuje `docs/WEBHOOK.md` v repe nacenime. Adresa webhooku končí lomkou: `https://<doména>/api/inbound/nacenime/`.
 
 ## 3. Vercel
 1. Projekt napoj na repo, vetvy a pull requesty dostanú Preview prostredie.
