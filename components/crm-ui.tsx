@@ -41,3 +41,10 @@ export const STATUS_SK: Record<string, string> = {
 export const FINANCING_SK: Record<string, string> = {
   nove: 'Nové', priprava: 'Príprava', riesi_sa: 'Rieši sa', vyriesene: 'Vyriešené', neriesi_sa: 'Nerieši sa',
 };
+
+/** PostgREST vracia vnorený záznam ako objekt alebo pole podľa vzťahu; vezme prvý. */
+export const one = <T,>(v: T | T[] | null | undefined): T | null => (Array.isArray(v) ? (v[0] ?? null) : (v ?? null));
+
+export const FIELD_SK: Record<string, string> = {
+  city_slug: 'Obec', property_type: 'Typ nehnuteľnosti', area_m2: 'Výmera (m²)', price: 'Cena', address: 'Adresa',
+};

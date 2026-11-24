@@ -11,10 +11,11 @@
    (zhoda od 80 %), pridelenie ocenení (ručne admin, automatické striedanie pripravené a vypnuté), návrh dokumentov, číselník obcí.
 6. `migrations/0006_inbound.sql`: príjem leadov z nacenime (uloženie surovej udalosti, vytvorenie klienta a ocenenia, pobočka podľa obce, opakovanie a čistenie).
 7. `migrations/0007_retention.sql`: uchovávanie údajov podľa zásad (neaktívne leady 24 mesiacov, dopyty z webu 12 mesiacov, audit 36 mesiacov) a `run_retention()`.
-8. `seed/branches.sql`: 4 pobočky, záložná pobočka a okresy (bezpečné aj na produkcii, idempotentné).
-9. Len staging: `seed/staging_staff.sql`: pobočky a role pre testovacie účty `admin@`, `makler@`, `financie@test.rozia.sk`
+8. `migrations/0008_create_mandate.sql`: vytvorenie náboru z ocenenia (`create_mandate_from_valuation`).
+9. `seed/branches.sql`: 4 pobočky, záložná pobočka a okresy (bezpečné aj na produkcii, idempotentné).
+10. Len staging: `seed/staging_staff.sql`: pobočky a role pre testovacie účty `admin@`, `makler@`, `financie@test.rozia.sk`
    (účty najprv vytvor v Authentication → Users s „Auto Confirm User“).
-10. `tests/rls_crm.sql`, `rls_crm_2.sql` (po 0004), `rls_crm_3.sql` (po 0005), `rls_crm_4.sql` (po 0006) a `rls_crm_5.sql` (po 0007): testy oprávnení a pravidiel. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = výsledok `VŠETKY TESTY PRESLI`.
+11. `tests/rls_crm.sql`, `rls_crm_2.sql` (po 0004), `rls_crm_3.sql` (po 0005), `rls_crm_4.sql` (po 0006), `rls_crm_5.sql` (po 0007) a `rls_crm_6.sql` (po 0008): testy oprávnení a pravidiel. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = výsledok `VŠETKY TESTY PRESLI`.
 
 ## Dôležité
 
@@ -44,6 +45,7 @@ psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_2.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_3.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_4.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_5.sql
+psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_6.sql
 ```
 
 Simulácia nenahrádza skúšku na skutočnom Supabase. Po nasadení na staging spusti oba testy v SQL Editore a ručne over, že
@@ -95,5 +97,7 @@ Oprávnenia vynucuje databáza (RLS a funkcie z migrácií); menu podľa roly je
 | `/crm/pridelenie/` | admin | ocenenia na pridelenie, výber makléra (`assign_valuation`), navrhnutá pobočka |
 | `/crm/financovanie/` a `/crm/financovanie/<id>/` | financie, admin | zoznam náborov, kontakt klienta (`finance_view_client`, zapisuje sa do auditu), stav financovania, poznámky |
 
-Zatiaľ chýba: vytvorenie náboru z ocenenia, archív a obnova náboru, vrátený klient, odovzdanie kolegovi, knižnica a vyplnenie dokumentov (funkcie sú v databáze, chýbajú obrazovky).
+Detail ocenenia (`/crm/ocenenia/<id>/`): údaje z kalkulačky, panel „Klient sa možno vrátil“ (obnoviť pôvodný nábor alebo nový nábor pre klienta) a tlačidlo „Vytvoriť nábor“ (`create_mandate_from_valuation`, migrácia 0008).
+Detail náboru (`/crm/nabory/<id>/`): úprava údajov, navrhnuté dokumenty, poznámky (aj poznámky k financovaniu), odovzdanie kolegovi, „Nedohodli sme sa“ (archív) a obnova z archívu.
+Zatiaľ chýba: knižnica šablón a vyplnenie dokumentov (po prevzatí šablón z duplikátu).
 Vyskúšanie na testovacom Supabase: vo Verceli (Preview) nastav `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, otvor `/crm/` a prihlás sa testovacím účtom (admin, maklér, financie zo seedu).

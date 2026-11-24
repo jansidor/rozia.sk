@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { requireStaff } from '@/lib/crm/session';
 import { Empty, Flash, PageTitle, dateTime, range } from '@/components/crm-ui';
 
@@ -36,7 +37,7 @@ export default async function MyValuations({ searchParams }: { searchParams: Pro
             const c = one(r.client);
             return (
               <li key={r.id} className="rounded-2xl border border-subtle bg-white p-4 shadow-card">
-                <p className="text-lg font-semibold">{r.property_type ?? 'Nehnuteľnosť'}{r.city_slug ? `, ${r.city_slug}` : ''}{r.area_m2 ? ` · ${r.area_m2} m²` : ''}</p>
+                <p className="text-lg font-semibold"><Link className="hover:underline" href={`/crm/ocenenia/${r.id}/`}>{r.property_type ?? 'Nehnuteľnosť'}{r.city_slug ? `, ${r.city_slug}` : ''}{r.area_m2 ? ` · ${r.area_m2} m²` : ''}</Link></p>
                 <p className="tabular text-muted">Odhad {range(r.estimate_low, r.estimate_high)} · pridelené {dateTime(r.assigned_at ?? r.created_at)}</p>
                 {c && (
                   <p className="mt-2">

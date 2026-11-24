@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { requireStaff } from '@/lib/crm/session';
-import { Empty, FINANCING_SK, PageTitle, STATUS_SK, dateTime } from '@/components/crm-ui';
+import { Empty, FINANCING_SK, Flash, PageTitle, STATUS_SK, dateTime } from '@/components/crm-ui';
 
 export const metadata: Metadata = { title: 'Nábory' };
 
@@ -9,7 +10,8 @@ interface Row {
   client: { full_name: string } | { full_name: string }[] | null;
 }
 
-export default async function Mandates() {
+export default async function Mandates({ searchParams }: { searchParams: Promise<{ ok?: string; chyba?: string }> }) {
+  const { ok, chyba } = await searchParams;
   const { supa, me } = await requireStaff('broker', 'admin');
   const { data, error } = await supa
     .from('mandates')
@@ -21,16 +23,16 @@ export default async function Mandates() {
   return (
     <>
       <PageTitle lead={me.role === 'broker' ? 'Vaše nábory.' : 'Všetky nábory.'}>{me.role === 'broker' ? 'Moje nábory' : 'Nábory'}</PageTitle>
-      {error && <p role="alert" className="mb-4 text-danger">Nábory sa nepodarilo načítať.</p>}
+      <Flash ok={ok} error={chyba ?? (error ? 'Nábory sa nepodarilo načítať.' : undefined)} />
       {rows.length === 0 ? (
-        <Empty>Zatiaľ žiadne nábory. Vytvorenie náboru z ocenenia pribudne v ďalšej verzii.</Empty>
+        <Empty>Zatiaľ žiadne nábory. Nábor vytvoríte z prideleného ocenenia.</Empty>
       ) : (
         <ul className="space-y-3">
           {rows.map((r) => {
             const c = Array.isArray(r.client) ? r.client[0] : r.client;
             return (
               <li key={r.id} className="rounded-2xl border border-subtle bg-white p-4 shadow-card">
-                <p className="text-lg font-semibold">{r.title}</p>
+                <p className="text-lg font-semibold"><Link className="hover:underline" href={`/crm/nabory/${r.id}/`}>{r.title}</Link></p>
                 <p className="text-muted">{c?.full_name ?? 'klient'}{r.address ? ` · ${r.address}` : ''} · {dateTime(r.created_at)}</p>
                 <p className="mt-1 text-sm"><span className="font-medium">{STATUS_SK[r.status] ?? r.status}</span> · financovanie: {FINANCING_SK[r.financing_status] ?? r.financing_status}</p>
               </li>
