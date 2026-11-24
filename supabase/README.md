@@ -7,7 +7,7 @@
 3. `migrations/0003_hardening.sql`: spevnenie: pohľad `comparables` už nie je verejný, kontroly rolí bezpečné voči NULL, záložné pobočky.
 4. Len staging: `seed/staging_staff.sql`: pobočky a role pre testovacie účty `admin@`, `makler@`, `financie@test.rozia.sk`
    (účty najprv vytvor v Authentication → Users s „Auto Confirm User“).
-5. `tests/rls_crm.sql`: testy oprávnení. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = správa `VŠETKY TESTY PRESLI`.
+5. `tests/rls_crm.sql`: testy oprávnení. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = výsledok `VŠETKY TESTY PRESLI`.
 
 ## Dôležité
 

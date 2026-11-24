@@ -1,5 +1,6 @@
 -- Testy oprávnení CRM jadra (RLS, role, financie, audit). Bezpečné na staging: všetko beží v transakcii a na konci sa vráti (ROLLBACK).
--- Spustenie: celý súbor vložiť do Supabase SQL Editora (alebo `psql -f`). Úspech = správa "VŠETKY TESTY PRESLI" a žiadna chyba.
+-- Spustenie: celý súbor vložiť do Supabase SQL Editora (alebo `psql -f`). Úspech = výsledok s textom "VŠETKY TESTY PRESLI" a žiadna chyba.
+-- Pri chybe sa zobrazí červená správa s číslom testu (napr. "A5 …"); "No rows returned" bez výsledku znamená, že skript nedobehol do konca.
 -- Používa vlastných testovacích používateľov (fixné UUID), nezávisle od účtov v Authentication.
 begin;
 
@@ -185,3 +186,5 @@ begin
 end $$;
 
 rollback;
+
+select 'VŠETKY TESTY PRESLI' as vysledok;
