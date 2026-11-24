@@ -29,3 +29,15 @@ Tajomstvo webhooku zadáva človek sám priamo vo Verceli (rovnaká hodnota ako 
 ## 5. Denná údržba (uchovávanie údajov)
 Vercel Cron volá denne `/api/cron/retention/` (vercel.json). Nastav vo Verceli `CRON_SECRET` (min. 16 znakov, `openssl rand -hex 32`); Vercel ho pošle v hlavičke
 `Authorization: Bearer ...`. Údržba maže a anonymizuje podľa zverejnených zásad ochrany osobných údajov. Po prvom nasadení skontroluj v Vercel → Cron Jobs, že úloha prebehla.
+
+## 6. Skúška príjmu leadov bez zapnutia skutočného webhooku
+Po nasadení a nastavení `NACENIME_WEBHOOK_SECRET` pošli testovací lead (vymyslené údaje, id od 900 000 000):
+
+```bash
+NACENIME_WEBHOOK_SECRET=<rovnaké tajomstvo ako vo Verceli> node scripts/send-test-lead.mjs https://<doména>/api/inbound/nacenime/
+```
+Očakávaná odpoveď `HTTP 200` a `{"status":"processed"}`. Ocenenie sa objaví v CRM v Nepridelených alebo na pridelenie (podľa obce Ružomberok a nastavenia `assignment_mode`).
+Zmazanie testovacích údajov (SQL Editor): `delete from valuations where source = 'nacenime' and source_id::bigint >= 900000000; delete from clients where source = 'nacenime' and source_id::bigint >= 900000000; delete from inbound_events where source = 'nacenime' and event_id ~ '^nacenime-lead-9\d{8}$';`
+
+## 7. Skutoční zamestnanci
+Účty zakladáš v Authentication → Users, rolu a pobočku nastavuje šablóna `supabase/seed/staff_template.sql` (vyplň mimo repa, v repe nech len šablónu).
