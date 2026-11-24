@@ -72,11 +72,13 @@ begin
   select string_agg(p.proname, ', ') into txt from pg_proc p
    where p.pronamespace = 'public'::regnamespace
      and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+     and p.prorettype not in ('trigger'::regtype, 'event_trigger'::regtype)   -- trigger funkcie sa zvonka volať nedajú (napr. rls_auto_enable od Supabase)
      and has_function_privilege('anon', p.oid, 'execute');
   assert txt is null, format('N9 anon smie volať: %s', txt);
   select string_agg(p.proname, ', ') into txt from pg_proc p
    where p.pronamespace = 'public'::regnamespace
      and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+     and p.prorettype not in ('trigger'::regtype, 'event_trigger'::regtype)
      and has_function_privilege('authenticated', p.oid, 'execute')
      and p.proname not in ('app_role', 'app_is_admin', 'app_is_finance', 'app_branch', 'set_financing_status',
                            'finance_view_client', 'claim_unassigned', 'set_my_availability', 'handoff_mandate',
@@ -162,8 +164,9 @@ begin
   failed := false;
   begin perform handoff_mandate(m1, e1); exception when others then failed := true; end;
   assert failed, 'H5 cieľom nemôže byť neexistujúci zamestnanec';
-  select count(*) into n from list_colleagues(); assert n = 3, format('H6 maklér vidí %s kolegov (čakané 3: b2, b4, neprítomný)', n);
-  select count(*) into n from list_colleagues() where availability = 'away'; assert n = 1, 'H7 zoznam ukazuje dostupnosť';
+  select count(*) into n from list_colleagues() where id in (b2, b4, c1); assert n = 3, format('H6 maklér vidí %s testovacích kolegov (čakané 3: b2, b4, neprítomný)', n);
+  select count(*) into n from list_colleagues() where id = b1; assert n = 0, 'H6b maklér nevidí sám seba v zozname kolegov';
+  select count(*) into n from list_colleagues() where availability = 'away' and id in (b2, b4, c1); assert n = 1, 'H7 zoznam ukazuje dostupnosť';
   perform handoff_mandate(m1, b4, 'dovolenka');                    -- do inej pobočky (Dolný Kubín)
   select count(*) into n from mandates; assert n = 0, 'H8 pôvodný maklér nábor už nevidí';
   select count(*) into n from clients where id = cl1; assert n = 0, 'H9 ani jeho klienta';
