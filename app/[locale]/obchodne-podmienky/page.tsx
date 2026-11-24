@@ -1,13 +1,13 @@
 import { pageMeta } from '@/lib/meta';
-import { legalReady, site } from '@/lib/site';
+import { approvedDocuments, legalReady, site } from '@/lib/site';
 import { LegalPage, Operator } from '@/components/legal-page';
 
 const path = '/obchodne-podmienky/';
-export const metadata = pageMeta({ title: 'Obchodné podmienky', description: 'Obchodné podmienky realitnej kancelárie Rozia: služby, cena, reklamácie a alternatívne riešenie sporov.', path, noindex: !legalReady });
+export const metadata = pageMeta({ title: 'Obchodné podmienky', description: 'Obchodné podmienky realitnej kancelárie Rozia: služby, cena, reklamácie a alternatívne riešenie sporov.', path, noindex: !(legalReady && approvedDocuments.terms) });
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Obchodné podmienky" path={path} updated="20. 11. 2026">
+    <LegalPage title="Obchodné podmienky" path={path} updated="20. 11. 2026" draft={!(legalReady && approvedDocuments.terms)}>
       <h2>1. Kto službu poskytuje</h2>
       <p><Operator /> (ďalej „Rozia“). Kontakt: <a href={`mailto:${site.email}`}>{site.email}</a>. Orgán dozoru: {site.legal.supervisor}.</p>
       <h2>2. Aké služby poskytujeme</h2>

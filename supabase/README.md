@@ -10,10 +10,11 @@
 5. `migrations/0005_lifecycle.sql`: archív nedohodnutých náborov s obnovením a anonymizáciou po 24 mesiacoch, vrátený klient
    (zhoda od 80 %), pridelenie ocenení (ručne admin, automatické striedanie pripravené a vypnuté), návrh dokumentov, číselník obcí.
 6. `migrations/0006_inbound.sql`: príjem leadov z nacenime (uloženie surovej udalosti, vytvorenie klienta a ocenenia, pobočka podľa obce, opakovanie a čistenie).
-7. `seed/branches.sql`: 4 pobočky, záložná pobočka a okresy (bezpečné aj na produkcii, idempotentné).
-8. Len staging: `seed/staging_staff.sql`: pobočky a role pre testovacie účty `admin@`, `makler@`, `financie@test.rozia.sk`
+7. `migrations/0007_retention.sql`: uchovávanie údajov podľa zásad (neaktívne leady 24 mesiacov, dopyty z webu 12 mesiacov, audit 36 mesiacov) a `run_retention()`.
+8. `seed/branches.sql`: 4 pobočky, záložná pobočka a okresy (bezpečné aj na produkcii, idempotentné).
+9. Len staging: `seed/staging_staff.sql`: pobočky a role pre testovacie účty `admin@`, `makler@`, `financie@test.rozia.sk`
    (účty najprv vytvor v Authentication → Users s „Auto Confirm User“).
-9. `tests/rls_crm.sql`, `rls_crm_2.sql` (po 0004), `rls_crm_3.sql` (po 0005) a `rls_crm_4.sql` (po 0006): testy oprávnení a pravidiel. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = výsledok `VŠETKY TESTY PRESLI`.
+10. `tests/rls_crm.sql`, `rls_crm_2.sql` (po 0004), `rls_crm_3.sql` (po 0005), `rls_crm_4.sql` (po 0006) a `rls_crm_5.sql` (po 0007): testy oprávnení a pravidiel. Všetko beží v transakcii a vráti sa (ROLLBACK), úspech = výsledok `VŠETKY TESTY PRESLI`.
 
 ## Dôležité
 
@@ -42,6 +43,7 @@ psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_2.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_3.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_4.sql
+psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_5.sql
 ```
 
 Simulácia nenahrádza skúšku na skutočnom Supabase. Po nasadení na staging spusti oba testy v SQL Editore a ručne over, že
@@ -70,3 +72,11 @@ funkciu `ingest_nacenime_event`. Odpovede: 200 uložené (aj keď spracovanie sk
 Funkcie len pre server (service role): `process_inbound_event`, `ingest_nacenime_event`, `retry_inbound_errors()` (chybné udalosti po oprave príčiny) a
 `scrub_inbound_events(dni)` (po spracovaní vymaže z udalosti osobné údaje, predvolene po 30 dňoch; pustiť z naplánovanej úlohy).
 Chybné udalosti sleduj: `select event_id, error, received_at from inbound_events where status = 'error'`.
+
+## Uchovávanie údajov (0007 a denná údržba)
+Zverejnené zásady ochrany osobných údajov sľubujú lehoty a tá databáza ich vynucuje. `run_retention()` (len server) denne: anonymizuje nedohodnuté nábory po 24 mesiacoch od
+ukončenia (`anonymize_archived`), anonymizuje leady z nacenime bez spolupráce po 24 mesiacoch od zadania (`anonymize_stale_leads`), čistí telá prijatých udalostí po 30 dňoch,
+maže dopyty z webu po 12 mesiacoch a audit po 36 mesiacoch. Lehoty sú v `app_settings` (`archive_retention_months`, `lead_retention_months`, `web_lead_retention_months`,
+`audit_retention_months`, `inbound_scrub_days`); **ak ich zmeníš, zmeň aj zásady na webe**. Funkciu spúšťa Vercel Cron (`vercel.json`, route `/api/cron/retention/`,
+tajomstvo `CRON_SECRET`). Bez nastaveného `CRON_SECRET` sa údržba nespustí, preto ho nastav pred zapnutím prenosu leadov.
+Súbory vo Storage na zmazanie sú zatiaľ len vo fronte `storage_cleanup` (Storage s dokumentmi ešte nie je nasadený); výsledok údržby ukazuje počet čakajúcich súborov.
