@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { CRM_HOME, CRM_LOGIN, crmRedirect } from '../lib/crm/guard';
 import { navFor, isRole, ROLE_LABEL } from '../lib/crm/nav';
-import { friendlyError, GENERIC_ERROR } from '../lib/crm/errors';
+import { readdirSync, readFileSync } from 'node:fs';
+import { friendlyError, GENERIC_ERROR, INTERNAL, KNOWN } from '../lib/crm/errors';
 
 describe('prístup do CRM (crmRedirect)', () => {
   it('neprihlásený ide na prihlásenie', () => {
@@ -53,5 +54,21 @@ describe('chybové hlásenia', () => {
     expect(friendlyError('')).toBe(GENERIC_ERROR);
     expect(friendlyError(undefined)).toBe(GENERIC_ERROR);
     expect(friendlyError(null)).toBe(GENERIC_ERROR);
+  });
+});
+
+describe('hlásenia z databázy sú zaradené', () => {
+  it('každé hlásenie raise exception v migráciách je medzi známymi alebo internými', () => {
+    const dir = new URL('../supabase/migrations/', import.meta.url);
+    const messages = new Set<string>();
+    for (const f of readdirSync(dir).filter((n) => n.endsWith('.sql'))) {
+      for (const m of readFileSync(new URL(f, dir), 'utf8').matchAll(/raise exception '([^']*)'/g)) messages.add(m[1] as string);
+    }
+    expect(messages.size).toBeGreaterThan(20);
+    const unclassified = [...messages].filter((m) => !KNOWN.includes(m) && !INTERNAL.includes(m));
+    expect(unclassified).toEqual([]);
+  });
+  it('žiadne hlásenie nie je zároveň známe aj interné', () => {
+    expect(KNOWN.filter((m) => INTERNAL.includes(m))).toEqual([]);
   });
 });
