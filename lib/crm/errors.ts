@@ -6,6 +6,7 @@
 export const KNOWN: readonly string[] = [
   'Archivované ocenenie sa nedá prideliť',
   'Cieľ musí byť aktívny a dostupný maklér',
+  'Klient má aktívny alebo predaný nábor iného makléra',
   'Klient nemá nábor',
   'Klient nemá rovnaký telefón ani e-mail ako klient ocenenia',
   'Len maklér si môže prevziať ocenenie',
@@ -47,6 +48,8 @@ export const INTERNAL: readonly string[] = [
   'Lead bez telefónu a bez súhlasu s kontaktovaním',
   'Lead nemá kontakt',
   'Len server',
+  'Maklér smie meniť len stav ocenenia',
+  'Maklér smie priamo meniť len údaje náboru',
   'Neplatná cena',
   'Neplatná výmera',
   'Neplatné ID udalosti',

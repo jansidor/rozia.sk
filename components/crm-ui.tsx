@@ -24,6 +24,9 @@ export function Empty({ children }: { children: ReactNode }) {
   return <p className="rounded-xl border border-dashed border-control bg-white px-4 py-8 text-center text-muted">{children}</p>;
 }
 
+/** mailto: odkaz bez možnosti vložiť ďalšie hlavičky (?bcc=…) z e-mailu zadaného klientom. */
+export const mailHref = (email: string) => `mailto:${encodeURIComponent(email).replace(/%40/g, '@')}`;
+
 export const eur = (n: number | null | undefined) => (n == null ? '–' : new Intl.NumberFormat('sk-SK', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n));
 export const dateTime = (iso: string | null | undefined) =>
   iso ? new Intl.DateTimeFormat('sk-SK', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Bratislava' }).format(new Date(iso)) : '–';

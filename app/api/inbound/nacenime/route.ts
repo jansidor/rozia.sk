@@ -12,7 +12,8 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request): Promise<Response> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const secrets = [process.env.NACENIME_WEBHOOK_SECRET ?? '', process.env.NACENIME_WEBHOOK_SECRET_PREVIOUS ?? ''];
+  // nacenime odmieta tajomstvo kratšie ako 32 znakov (WebhookPodpis::MIN_DLZKA_TAJOMSTVA); príjem pre slabé tajomstvo nepustí nič
+  const secrets = [process.env.NACENIME_WEBHOOK_SECRET ?? '', process.env.NACENIME_WEBHOOK_SECRET_PREVIOUS ?? ''].filter((s) => s.length >= 32);
 
   return handleInbound(request, {
     secrets: url && key ? secrets : [],

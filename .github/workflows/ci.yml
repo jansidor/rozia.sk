@@ -59,7 +59,9 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm_5.sql
       - name: Testy (0008 - vytvorenie náboru z ocenenia)
         run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm_6.sql
-      - name: Migrácie sú opakovateľné (0003 až 0008 druhýkrát) a seed pobočiek
+      - name: Testy (0009 - opravy z nezávislej kontroly)
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls_crm_7.sql
+      - name: Migrácie sú opakovateľné (0003 až 0009 druhýkrát) a seed pobočiek
         run: |
           psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0003_hardening.sql
           psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0004_hardening_handoff.sql
@@ -67,5 +69,6 @@ jobs:
           psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0006_inbound.sql
           psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0007_retention.sql
           psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0008_create_mandate.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/migrations/0009_audit_fixes.sql
           psql -v ON_ERROR_STOP=1 -q -f supabase/seed/branches.sql
           psql -v ON_ERROR_STOP=1 -q -f supabase/seed/branches.sql

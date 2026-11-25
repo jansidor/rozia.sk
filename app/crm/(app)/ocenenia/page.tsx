@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireStaff } from '@/lib/crm/session';
-import { Empty, Flash, PageTitle, dateTime, range } from '@/components/crm-ui';
+import { Empty, Flash, PageTitle, dateTime, range, mailHref } from '@/components/crm-ui';
 
 export const metadata: Metadata = { title: 'Moje ocenenia' };
 
@@ -43,7 +43,7 @@ export default async function MyValuations({ searchParams }: { searchParams: Pro
                   <p className="mt-2">
                     <strong>{c.full_name}</strong>
                     {c.phone && <> · <a className="text-green-700 underline" href={`tel:${c.phone.replace(/\s/g, '')}`}>{c.phone}</a></>}
-                    {c.email && <> · <a className="text-green-700 underline" href={`mailto:${c.email}`}>{c.email}</a></>}
+                    {c.email && <> · <a className="text-green-700 underline" href={mailHref(c.email)}>{c.email}</a></>}
                   </p>
                 )}
               </li>
