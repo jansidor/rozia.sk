@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff } from '@/lib/crm/session';
-import { FIELD_SK, Flash, PageTitle, STATUS_SK, dateTime, one, range } from '@/components/crm-ui';
+import { FIELD_SK, Flash, PageTitle, STATUS_SK, dateTime, one, range, mailHref } from '@/components/crm-ui';
 import { Button } from '@/components/ui/button';
 import { createMandate, linkReturningClient } from '../../../actions';
 
@@ -69,7 +69,7 @@ export default async function ValuationDetail({ params, searchParams }: { params
           <p className="mt-3 border-t border-subtle pt-3">
             <strong>{c.full_name}</strong>
             {c.phone && <> · <a className="text-green-700 underline" href={`tel:${c.phone.replace(/\s/g, '')}`}>{c.phone}</a></>}
-            {c.email && <> · <a className="text-green-700 underline" href={`mailto:${c.email}`}>{c.email}</a></>}
+            {c.email && <> · <a className="text-green-700 underline" href={mailHref(c.email)}>{c.email}</a></>}
           </p>
         )}
       </section>

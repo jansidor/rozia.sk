@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff } from '@/lib/crm/session';
-import { FINANCING_SK, Flash, PageTitle, STATUS_SK, dateTime, one } from '@/components/crm-ui';
+import { FINANCING_SK, Flash, PageTitle, STATUS_SK, dateTime, one, mailHref } from '@/components/crm-ui';
 import { Button } from '@/components/ui/button';
 import { inputStyles } from '@/components/ui/field';
 import { addMandateNote, closeMandate, handoffMandate, restoreMandate, updateMandate } from '../../../actions';
@@ -58,7 +58,7 @@ export default async function MandateDetail({ params, searchParams }: { params: 
           <p className="mt-1">
             <strong>{client.full_name}</strong>
             {client.phone && <> · <a className="text-green-700 underline" href={`tel:${client.phone.replace(/\s/g, '')}`}>{client.phone}</a></>}
-            {client.email && <> · <a className="text-green-700 underline" href={`mailto:${client.email}`}>{client.email}</a></>}
+            {client.email && <> · <a className="text-green-700 underline" href={mailHref(client.email)}>{client.email}</a></>}
           </p>
         ) : <p className="mt-1 text-muted">Údaje klienta nie sú dostupné.</p>}
         <p className="mt-2 text-sm text-muted">Financovanie: {FINANCING_SK[m.financing_status] ?? m.financing_status}{m.financing_reason ? ` (${m.financing_reason})` : ''}</p>

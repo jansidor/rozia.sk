@@ -3,6 +3,7 @@ import { CRM_HOME, CRM_LOGIN, crmRedirect } from '../lib/crm/guard';
 import { navFor, isRole, ROLE_LABEL } from '../lib/crm/nav';
 import { readdirSync, readFileSync } from 'node:fs';
 import { friendlyError, GENERIC_ERROR, INTERNAL, KNOWN } from '../lib/crm/errors';
+import { mailHref } from '../components/crm-ui';
 
 describe('prístup do CRM (crmRedirect)', () => {
   it('neprihlásený ide na prihlásenie', () => {
@@ -70,5 +71,17 @@ describe('hlásenia z databázy sú zaradené', () => {
   });
   it('žiadne hlásenie nie je zároveň známe aj interné', () => {
     expect(KNOWN.filter((m) => INTERNAL.includes(m))).toEqual([]);
+  });
+});
+
+describe('mailHref', () => {
+  it('obyčajný e-mail ostane čitateľný', () => {
+    expect(mailHref('jan.novak@example.sk')).toBe('mailto:jan.novak@example.sk');
+  });
+  it('e-mail od klienta nevie pridať hlavičky (bcc, subject, body)', () => {
+    const href = mailHref('a?bcc=zly@example.sk&subject=x@example.sk');
+    expect(href.startsWith('mailto:a%3Fbcc')).toBe(true);
+    expect(href).not.toContain('?');
+    expect(href).not.toContain('&');
   });
 });

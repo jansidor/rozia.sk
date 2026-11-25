@@ -46,10 +46,16 @@ psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_3.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_4.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_5.sql
 psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_6.sql
+psql -v ON_ERROR_STOP=1 -q -d rozia_test -f supabase/tests/rls_crm_7.sql
 ```
 
 Simulácia nenahrádza skúšku na skutočnom Supabase. Po nasadení na staging spusti oba testy v SQL Editore a ručne over, že
 verejný (anon) kľúč nevie volať `rpc/audit`, `rpc/claim_unassigned` ani ďalšie funkcie CRM (odpoveď 401/403 alebo „permission denied“).
+
+## Opravy z nezávislej kontroly (0009)
+Maklér po „Vziať si“ vidí kontakt klienta (vlastníka klienta nastaví `claim_unassigned`). `link_returning_client` neprevezme klienta s aktívnym alebo predaným nábor iného makléra.
+Na ocenení maklér priamo mení len `status` (nie `client_id`). Na nábore maklér priamo mení len názov, adresu, parcelu, LV, výmeru, cenu a províziu (spúšťač `guard_mandate_columns`);
+nábor vzniká cez `create_mandate_from_valuation`, životný cyklus mení `close_mandate_unagreed`, `restore_mandate`, `handoff_mandate`; priamo vkladať a mazať smie len admin.
 
 ## Pravidlo pre nové funkcie
 Každá nová funkcia v schéme `public` dostane hneď `revoke all on function ... from public, anon, authenticated;` a `grant execute ... to authenticated`

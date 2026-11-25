@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff } from '@/lib/crm/session';
 import { friendlyError } from '@/lib/crm/errors';
-import { FINANCING_SK, Flash, PageTitle, STATUS_SK, dateTime, eur } from '@/components/crm-ui';
+import { FINANCING_SK, Flash, PageTitle, STATUS_SK, dateTime, eur, mailHref } from '@/components/crm-ui';
 import { Button } from '@/components/ui/button';
 import { inputStyles } from '@/components/ui/field';
 import { addFinancingNote, setFinancing } from '../../../actions';
@@ -55,7 +55,7 @@ export default async function FinancingDetail({ params, searchParams }: { params
           <p className="mt-1">
             <strong>{contact.full_name}</strong>
             {contact.phone && <> · <a className="text-green-700 underline" href={`tel:${contact.phone.replace(/\s/g, '')}`}>{contact.phone}</a></>}
-            {contact.email && <> · <a className="text-green-700 underline" href={`mailto:${contact.email}`}>{contact.email}</a></>}
+            {contact.email && <> · <a className="text-green-700 underline" href={mailHref(contact.email)}>{contact.email}</a></>}
           </p>
         ) : (
           <p className="mt-1 text-danger">{contactError ? friendlyError(contactError.message) : 'Kontakt sa nepodarilo načítať.'}</p>
